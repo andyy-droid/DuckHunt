@@ -19,7 +19,15 @@ public:
     int getLives() const;
     int getBullets() const;
 
+    // score handling
+    int getScore() const;
+    void addScore(int amount);
+
+    // reset game state (lives, bullets, score)
+    void reset(int initialLives = 3, int initialBullets = 3);
+
 private:
     int lives;
     int bullets;
+    int score;
 };

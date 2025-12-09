@@ -2,7 +2,7 @@
 #include "Duck.h"
 
 GameManager::GameManager(int initialLives, int initialBullets)
-    : lives(initialLives), bullets(initialBullets)
+    : lives(initialLives), bullets(initialBullets), score(0)
 {
 }
 
@@ -15,6 +15,7 @@ bool GameManager::processShot(const sf::Vector2f& shotPos, std::vector<Duck>& du
         if (d.isHit(shotPos))
         {
             d.kill();
+            addScore(100); // award points for a hit
             return true;
         }
     }
@@ -42,3 +43,13 @@ void GameManager::decrementBullets(int amount)
 
 int GameManager::getLives() const { return lives; }
 int GameManager::getBullets() const { return bullets; }
+
+int GameManager::getScore() const { return score; }
+void GameManager::addScore(int amount) { score += amount; }
+
+void GameManager::reset(int initialLives, int initialBullets)
+{
+    lives = initialLives;
+    bullets = initialBullets;
+    score = 0;
+}
