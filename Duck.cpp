@@ -1,5 +1,4 @@
 #include "Duck.h"
-#include "Duck.h"
 #include <iostream>
 
 Duck::Duck(const sf::Vector2f& pos)
@@ -10,7 +9,9 @@ Duck::Duck(const sf::Vector2f& pos)
     shape.setOrigin(shape.getRadius(), shape.getRadius());
     shape.setPosition(pos);
 
-    // sprite remains empty until loadTexture is called; caller can also set texture externally
+    // Try to load a default duck texture from the assets folder; if present,
+    // the sprite will replace the yellow circle automatically.
+    loadTexture("./assets/images/duck.png");
 }
 
 bool Duck::loadTexture(const std::string& path)
@@ -22,16 +23,20 @@ bool Duck::loadTexture(const std::string& path)
         // center origin based on texture size
         sf::Vector2u sz = texture.getSize();
         sprite.setOrigin(sz.x / 2.f, sz.y / 2.f);
-        // scale down if image is large (keep reasonable size)
-        float scale = 40.f / std::max(1u, std::max(sz.x, sz.y));
-        if (scale < 1.f) sprite.setScale(scale, scale);
+        // scale image to a desired visual size (height or width), e.g. 64px
+        float desiredSize = 64.f;
+        float maxDim = static_cast<float>(std::max(1u, std::max(sz.x, sz.y)));
+        float scale = desiredSize / maxDim;
+        sprite.setScale(scale, scale);
         // place sprite at current shape position
         sprite.setPosition(shape.getPosition());
+        std::cerr << "Duck::loadTexture - loaded texture from: " << path << " (size=" << texture.getSize().x << "x" << texture.getSize().y << ")\n";
         return true;
     }
     else
     {
         hasTexture = false;
+        std::cerr << "Duck::loadTexture - FAILED to load texture from: " << path << "\n";
         return false;
     }
 }
@@ -79,11 +84,19 @@ void Duck::draw(sf::RenderWindow& window)
 bool Duck::isHit(const sf::Vector2f& point) const
 {
     if (!alive) return false;
-    sf::Vector2f p = hasTexture ? sprite.getPosition() : shape.getPosition();
-    float dx = p.x - point.x;
-    float dy = p.y - point.y;
-    float r = hasTexture ? 20.f : shape.getRadius();
-    return (dx*dx + dy*dy) <= (r*r);
+    if (hasTexture)
+    {
+        // Use sprite bounding box for textured ducks (more accurate for images)
+        return sprite.getGlobalBounds().contains(point);
+    }
+    else
+    {
+        sf::Vector2f p = shape.getPosition();
+        float dx = p.x - point.x;
+        float dy = p.y - point.y;
+        float r = shape.getRadius();
+        return (dx*dx + dy*dy) <= (r*r);
+    }
 }
 
 bool Duck::isAlive() const { return alive; }

@@ -8,6 +8,8 @@
 #include "Duck.h"
 #include "GameManager.h"
 
+#include <filesystem>
+
 // Simple demo with sprite/audio integration, dynamic spawn, scoring and restart
 int main()
 {
@@ -77,6 +79,18 @@ int main()
     // try to preload duck texture path
     const std::string duckTexPath = "./assets/images/duck.png";
 
+    // debug: print current working directory and check texture existence
+    try {
+        std::cerr << "Current working directory: " << std::filesystem::current_path() << std::endl;
+        if (std::filesystem::exists(duckTexPath))
+            std::cerr << "Found duck texture at: " << std::filesystem::absolute(duckTexPath) << std::endl;
+        else
+            std::cerr << "Duck texture NOT found at relative path: " << duckTexPath << "\n";
+    }
+    catch (const std::exception &e) {
+        std::cerr << "Filesystem check error: " << e.what() << std::endl;
+    }
+
     sf::Clock clock;
     float spawnTimer = 0.f;
     const float spawnInterval = 2.0f; // seconds
@@ -84,8 +98,10 @@ int main()
     // initial spawn
     auto spawnDuck = [&](float x, float y, float vx) {
         Duck d(sf::Vector2f(x, y));
-        if (d.loadTexture(duckTexPath)) {
-            // texture loaded inside duck
+        bool loaded = d.loadTexture(duckTexPath);
+        if (!loaded)
+        {
+            std::cerr << "spawnDuck: duck texture not loaded, will use fallback shape\n";
         }
         d.respawn(sf::Vector2f(x, y), sf::Vector2f(vx, 0.f));
         ducks.push_back(std::move(d));
